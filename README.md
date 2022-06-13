@@ -1,12 +1,17 @@
-SPLV 2020
----------
+# tidr-v2
 
-Course notes and supporting code for the Scottish Programming Language and
-Verification summer school course on "The Implementation of Idris 2"
+My notes about TinyIdris (v2). See the original repo for more details.
 
-This includes:
+## Building
 
-* `Slides` --- containing the (PDF) slides from the lectures
-* `Code` --- containing the code used in the lectures, and exercises
-* `TinyIdris-v1` --- an initial implementation of TinyIdris
-* `TinyIdris-v2` --- an expanded implementation of TinyIdris with unification
+* Only workable Idris 2 version for this codebase: [v0.2.1]
+* A recommended VSCode plugin for Idris 2: [idris-vscode]
+
+```bash
+$ cd TinyIdris-v2/
+$ idris2 --build tinyidris.pkg # for building
+$ idris2 --repl tinyidris.pkg # for REPL and debugging
+```
+
+[v0.2.1]: https://github.com/idris-lang/Idris2/releases/tag/v0.2.1
+[idris-vscode]: https://marketplace.visualstudio.com/items?itemName=meraymond.idris-vscode
