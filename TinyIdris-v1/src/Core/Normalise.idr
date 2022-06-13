@@ -54,8 +54,6 @@ parameters (defs : Defs)
         = evalLocal env idx prf stk locs
     eval env locs (Ref nt fn) stk
         = evalRef env nt fn stk (NApp (NRef nt fn) stk)
-    eval {vars} {free} env locs (Meta name args) stk
-        = evalMeta env name (map (MkClosure locs env) args) stk
     eval env locs (Bind x (Lam _ ty) scope) (thunk :: stk)
         = eval env (thunk :: locs) scope stk
     eval env locs (Bind x b scope) stk
@@ -90,13 +88,6 @@ parameters (defs : Defs)
     evalLocal {vars = x :: xs} {free}
               env (S idx) (Later p) stk (_ :: locs)
         = evalLocal {vars = xs} env idx p stk locs
-
-    evalMeta : {free : _} ->
-               Env Term free ->
-               Name -> List (Closure free) ->
-               Stack free -> Core (NF free)
-    evalMeta env nm args stk
-        = evalRef env Func nm (args ++ stk) (NApp (NMeta nm args) stk)
 
     evalRef : {free : _} ->
               Env Term free ->
@@ -305,9 +296,6 @@ mutual
           = do MkVar p <- findName ns
                Just (MkVar (Later p))
   quoteHead q defs bounds env (NRef nt n) = pure $ Ref nt n
-  quoteHead q defs bounds env (NMeta n args)
-      = do args' <- quoteArgs q defs bounds env args
-           pure $ Meta n args'
 
   quoteBinder : {bound, free : _} ->
                 Ref QVar Int -> Defs -> Bounds bound ->
@@ -403,10 +391,6 @@ mutual
                 NHead vars -> NHead vars -> Core Bool
   chkConvHead q defs env (NLocal idx _) (NLocal idx' _) = pure $ idx == idx'
   chkConvHead q defs env (NRef _ n) (NRef _ n') = pure $ n == n'
-  chkConvHead q defs env (NMeta n args) (NMeta n' args')
-     = if n == n'
-          then allConv q defs env args args'
-          else pure False
   chkConvHead q defs env _ _ = pure False
 
   convBinders : {vars : _} ->

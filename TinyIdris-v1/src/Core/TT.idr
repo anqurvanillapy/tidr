@@ -115,7 +115,6 @@ data Term : List Name -> Type where
              (0 p : IsVar name idx vars) -> -- proof that index is valid
              Term vars
      Ref : NameType -> Name -> Term vars -- a reference to a global name
-     Meta : Name -> List (Term vars) -> Term vars
      Bind : (x : Name) -> -- any binder, e.g. lambda or pi
             Binder (Term vars) ->
             (scope : Term (x :: vars)) -> -- one more name in scope
@@ -185,8 +184,6 @@ insertNames ns (Local idx prf)
     = let MkNVar prf' = insertNVarNames {ns} idx prf in
           Local _ prf'
 insertNames ns (Ref nt name) = Ref nt name
-insertNames ns (Meta name args)
-    = Meta name (map (insertNames ns) args)
 insertNames {outer} {inner} ns (Bind x b scope)
     = Bind x (assert_total (map (insertNames ns) b))
            (insertNames {outer = x :: outer} {inner} ns scope)
@@ -238,9 +235,6 @@ mkLocals bs (Ref Bound name)
     = maybe (Ref Bound name) id (resolveRef [] bs name)
 mkLocals bs (Ref nt name)
     = Ref nt name
-mkLocals bs (Meta name xs)
-    = maybe (Meta name (map (mkLocals bs) xs))
-            id (resolveRef [] bs name)
 mkLocals {later} bs (Bind x b scope)
     = Bind x (map (mkLocals bs) b)
            (mkLocals {later = x :: later} bs scope)
@@ -267,8 +261,6 @@ resolveNames vars (Ref Bound name)
     = case isVar name vars of
            Just (MkVar prf) => Local _ prf
            _ => Ref Bound name
-resolveNames vars (Meta n xs)
-    = Meta n (map (resolveNames vars) xs)
 resolveNames vars (Bind x b scope)
     = Bind x (map (resolveNames vars) b) (resolveNames (x :: vars) scope)
 resolveNames vars (App fn arg)
@@ -306,8 +298,6 @@ namespace SubstEnv
   substEnv env (Local _ prf)
       = find prf env
   substEnv env (Ref x name) = Ref x name
-  substEnv env (Meta n xs)
-      = Meta n (map (substEnv env) xs)
   substEnv {outer} env (Bind x b scope)
       = Bind x (map (substEnv env) b)
                (substEnv {outer = x :: outer} env scope)
@@ -332,8 +322,6 @@ substName x new (Ref nt name)
     = case nameEq x name of
            Nothing => Ref nt name
            Just Refl => new
-substName x new (Meta n xs)
-    = Meta n (map (substName x new) xs)
 -- ASSUMPTION: When we substitute under binders, the name has always been
 -- resolved to a Local, so no need to check that x isn't shadowing
 substName x new (Bind y b scope)
@@ -392,8 +380,6 @@ export
       showApp (Local {name} idx p) []
          = show (nameAt idx p) ++ "[" ++ show idx ++ "]"
       showApp (Ref _ n) [] = show n
-      showApp (Meta n args) []
-          = "?" ++ show n ++ "_" ++ show args
       showApp (Bind x (Lam p ty) sc) []
           = "\\" ++ show x ++ " : " ++ show ty ++
             " => " ++ show sc

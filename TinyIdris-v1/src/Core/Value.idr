@@ -23,7 +23,6 @@ mutual
        NLocal : (idx : Nat) -> (0 p : IsVar name idx vars) ->
                 NHead vars
        NRef   : NameType -> Name -> NHead vars
-       NMeta  : Name -> List (Closure vars) -> NHead vars
 
   -- Values themselves. 'Closure' is an unevaluated thunk, which means
   -- we can wait until necessary to reduce constructor arguments
