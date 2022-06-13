@@ -56,30 +56,30 @@ checkTerm env (IVar n) exp
                               TCon t a => TyCon t a
                               _ => Func
                 checkExp env (Ref nt n) (gnf env (embed (type gdef))) exp
-checkTerm env (IPi p mn argTy retTy) exp
+checkTerm env (IPi mn argTy retTy) exp
     = do let n = fromMaybe (MN "_" 0) mn
          (argTytm, gargTyty) <- checkTerm env argTy (Just gType)
          let env' : Env Term (n :: vars)
-                  = Pi p argTytm :: env
+                  = Pi argTytm :: env
          (retTytm, gretTyty) <- checkTerm env' retTy (Just gType)
-         checkExp env (Bind n (Pi p argTytm) retTytm) gType exp
-checkTerm env (ILam p mn argTy scope) Nothing = ?todo_infer_lam
-checkTerm env (ILam p mn argTy scope) (Just exp)
+         checkExp env (Bind n (Pi argTytm) retTytm) gType exp
+checkTerm env (ILam mn argTy scope) Nothing = ?todo_infer_lam
+checkTerm env (ILam mn argTy scope) (Just exp)
     = do let n = fromMaybe (MN "_" 0) mn
          (argTytm, gargTyty) <- checkTerm env argTy (Just gType)
          let env' : Env Term (n :: vars)
-                  = Lam p argTytm :: env
+                  = Lam argTytm :: env
          expTyNF <- getNF exp
          defs <- get Ctxt
          case !(quote defs env expTyNF) of
-              Bind _ (Pi _ ty) sc =>
+              Bind _ (Pi ty) sc =>
                  do let env' : Env Term (n :: vars)
-                             = Lam p argTytm :: env
+                             = Lam argTytm :: env
                     let scty = renameTop n sc
                     (scopetm, gscopety) <-
                               checkTerm env' scope (Just (gnf env' scty))
-                    checkExp env (Bind n (Lam p argTytm) scopetm)
-                                 (gnf env (Bind n (Pi p argTytm) !(getTerm gscopety)))
+                    checkExp env (Bind n (Lam argTytm) scopetm)
+                                 (gnf env (Bind n (Pi argTytm) !(getTerm gscopety)))
                                  (Just exp)
               _ => throw (GenericMsg "Lambda must have a function type")
 checkTerm env (IPatvar n ty scope) exp
@@ -97,7 +97,7 @@ checkTerm env (IApp f a) exp
          -- We can only proceed if it really does have a function type
          case fty of
               -- Ignoring the implicitness for now
-              NBind x (Pi _ ty) sc =>
+              NBind x (Pi ty) sc =>
                     do defs <- get Ctxt
                        -- Check the argument type, given the expected argument
                        -- type

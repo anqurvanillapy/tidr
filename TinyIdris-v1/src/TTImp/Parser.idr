@@ -54,10 +54,8 @@ getRight : Either a b -> Maybe b
 getRight (Left _) = Nothing
 getRight (Right v) = Just v
 
-bindSymbol : Rule PiInfo
-bindSymbol
-    = do symbol "->"
-         pure Explicit
+bindSymbol : Rule ()
+bindSymbol = symbol "->"
 
 mutual
   appExpr : FileName -> IndentInfo -> Rule RawImp
@@ -88,22 +86,21 @@ mutual
   typeExpr fname indents
       = do arg <- appExpr fname indents
            (do continue indents
-               rest <- some (do exp <- bindSymbol
-                                op <- appExpr fname indents
-                                pure (exp, op))
+               rest <- some (do bindSymbol
+                                appExpr fname indents)
                pure (mkPi arg rest))
              <|> pure arg
     where
-      mkPi : RawImp -> List (PiInfo, RawImp) -> RawImp
+      mkPi : RawImp -> List RawImp -> RawImp
       mkPi arg [] = arg
-      mkPi arg ((exp, a) :: as)
-            = IPi exp Nothing arg (mkPi a as)
+      mkPi arg (a :: as)
+            = IPi Nothing arg (mkPi a as)
 
-  pibindAll : PiInfo -> List (Maybe Name, RawImp) ->
+  pibindAll : List (Maybe Name, RawImp) ->
               RawImp -> RawImp
-  pibindAll p [] scope = scope
-  pibindAll p ((n, ty) :: rest) scope
-           = IPi p n ty (pibindAll p rest scope)
+  pibindAll [] scope = scope
+  pibindAll ((n, ty) :: rest) scope
+           = IPi n ty (pibindAll rest scope)
 
   bindList : FileName -> IndentInfo ->
              Rule (List (Name, RawImp))
@@ -145,27 +142,17 @@ mutual
            let binders = map (\n => (Just (UN n), Implicit)) ns
            symbol "."
            scope <- typeExpr fname indents
-           pure (pibindAll Implicit binders scope)
-
-  implicitPi : FileName -> IndentInfo -> Rule RawImp
-  implicitPi fname indents
-      = do symbol "{"
-           binders <- pibindList fname indents
-           symbol "}"
-           symbol "->"
-           scope <- typeExpr fname indents
-           end <- location
-           pure (pibindAll Implicit binders scope)
+           pure (pibindAll binders scope)
 
   explicitPi : FileName -> IndentInfo -> Rule RawImp
   explicitPi fname indents
       = do symbol "("
            binders <- pibindList fname indents
            symbol ")"
-           exp <- bindSymbol
+           bindSymbol
            scope <- typeExpr fname indents
            end <- location
-           pure (pibindAll exp binders scope)
+           pure (pibindAll binders scope)
 
   lam : FileName -> IndentInfo -> Rule RawImp
   lam fname indents
@@ -180,7 +167,7 @@ mutual
        bindAll : List (Name, RawImp) -> RawImp -> RawImp
        bindAll [] scope = scope
        bindAll ((n, ty) :: rest) scope
-           = ILam Explicit (Just n) ty (bindAll rest scope)
+           = ILam (Just n) ty (bindAll rest scope)
 
   pat : FileName -> IndentInfo -> Rule RawImp
   pat fname indents
@@ -200,7 +187,6 @@ mutual
   binder : FileName -> IndentInfo -> Rule RawImp
   binder fname indents
       = forall_ fname indents
-    <|> implicitPi fname indents
     <|> explicitPi fname indents
     <|> lam fname indents
     <|> pat fname indents

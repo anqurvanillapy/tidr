@@ -5,10 +5,8 @@ import Core.TT
 public export
 data RawImp : Type where
      IVar : Name -> RawImp
-     IPi : PiInfo -> Maybe Name ->
-           (argTy : RawImp) -> (retTy : RawImp) -> RawImp
-     ILam : PiInfo -> Maybe Name ->
-            (argTy : RawImp) -> (scope : RawImp) -> RawImp
+     IPi : Maybe Name -> (argTy : RawImp) -> (retTy : RawImp) -> RawImp
+     ILam : Maybe Name -> (argTy : RawImp) -> (scope : RawImp) -> RawImp
      IPatvar : Name -> (ty : RawImp) -> (scope : RawImp) -> RawImp
         -- ^ Idris doesn't need this since the pattern variable names are
         -- inferred, but in this initial version everything is explicit

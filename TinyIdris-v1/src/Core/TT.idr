@@ -83,29 +83,24 @@ weakenNVar (y :: xs) x
          MkNVar (Later x')
 
 public export
-data PiInfo : Type where
-     Implicit : PiInfo
-     Explicit : PiInfo
-
-public export
 data Binder : Type -> Type where
-     Lam : PiInfo -> ty -> Binder ty
-     Pi : PiInfo -> ty -> Binder ty
+     Lam : ty -> Binder ty
+     Pi : ty -> Binder ty
 
      PVar : ty -> Binder ty -- pattern bound variables ...
      PVTy : ty -> Binder ty -- ... and their type
 
 export
 binderType : Binder tm -> tm
-binderType (Lam x ty) = ty
-binderType (Pi x ty) = ty
+binderType (Lam ty) = ty
+binderType (Pi ty) = ty
 binderType (PVar ty) = ty
 binderType (PVTy ty) = ty
 
 export
 Functor Binder where
-  map func (Lam x ty) = Lam x (func ty)
-  map func (Pi x ty) = Pi x (func ty)
+  map func (Lam ty) = Lam (func ty)
+  map func (Pi ty) = Pi (func ty)
   map func (PVar ty) = PVar (func ty)
   map func (PVTy ty) = PVTy (func ty)
 
@@ -380,15 +375,12 @@ export
       showApp (Local {name} idx p) []
          = show (nameAt idx p) ++ "[" ++ show idx ++ "]"
       showApp (Ref _ n) [] = show n
-      showApp (Bind x (Lam p ty) sc) []
+      showApp (Bind x (Lam ty) sc) []
           = "\\" ++ show x ++ " : " ++ show ty ++
             " => " ++ show sc
-      showApp (Bind x (Pi Explicit ty) sc) []
+      showApp (Bind x (Pi ty) sc) []
           = "((" ++ show x ++ " : " ++ show ty ++
             ") -> " ++ show sc ++ ")"
-      showApp (Bind x (Pi Implicit ty) sc) []
-          = "{" ++ show x ++ " : " ++ show ty ++
-            "} -> " ++ show sc
       showApp (Bind x (PVar ty) sc) []
           = "pat " ++ show x ++ " : " ++ show ty ++
             " => " ++ show sc
