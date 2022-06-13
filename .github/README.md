@@ -1,6 +1,6 @@
-# tidr-v2
+# tidr
 
-My notes about TinyIdris (v2). See the original repo for more details.
+My notes about TinyIdris. See the original repo for more details.
 
 ## Building
 
@@ -8,7 +8,7 @@ My notes about TinyIdris (v2). See the original repo for more details.
 * A recommended VSCode plugin for Idris 2: [idris-vscode]
 
 ```bash
-$ cd TinyIdris-v2/
+$ cd TinyIdris-v1/ # or TinyIdris-v2/
 $ idris2 --build tinyidris.pkg # for building
 $ idris2 --repl tinyidris.pkg # for REPL and debugging
 ```
